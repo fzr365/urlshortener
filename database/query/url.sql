@@ -10,3 +10,10 @@ INSERT INTO urls (
 
 -- name: GetInsertedURL :one
 SELECT * FROM urls WHERE id = LAST_INSERT_ID();
+
+
+-- name: IsShortCodeAvailable :one
+SELECT NOT EXISTS(
+     SELECT 1 FROM urls
+     WHERE short_code = $1
+)AS is_available;
