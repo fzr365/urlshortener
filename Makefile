@@ -26,4 +26,4 @@ migrate_up:
 	migrate -path="./database/migrate" -database=${databaseURL} up
 
 migrate_down:
-	migrate -path="./database/migrate" -database=${databaseURL} drop f
+	migrate -path="./database/migrate" -database=${databaseURL} drop -f
