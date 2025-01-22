@@ -1,4 +1,4 @@
---name: CreateURL :one
+-- name: CreateURL :exec
 INSERT INTO urls (
     original_url,
     short_code,
@@ -6,4 +6,7 @@ INSERT INTO urls (
     expired_at
 ) VALUES (
     $1, $2, $3, $4
-) RETURNING *;
+);
+
+-- name: GetInsertedURL :one
+SELECT * FROM urls WHERE id = LAST_INSERT_ID();
