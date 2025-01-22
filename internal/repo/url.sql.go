@@ -7,6 +7,7 @@ package repo
 
 import (
 	"context"
+	"time"
 )
 
 const createURL = `-- name: CreateURL :exec
@@ -16,12 +17,24 @@ INSERT INTO urls (
     is_custom,
     expired_at
 ) VALUES (
-    $1, $2, $3, $4
+     ?,?,?,?
 )
 `
 
-func (q *Queries) CreateURL(ctx context.Context) error {
-	_, err := q.db.ExecContext(ctx, createURL)
+type CreateURLParams struct {
+	OriginalUrl string    `json:"original_url"`
+	ShortCode   string    `json:"short_code"`
+	IsCustom    bool      `json:"is_custom"`
+	ExpiredAt   time.Time `json:"expired_at"`
+}
+
+func (q *Queries) CreateURL(ctx context.Context, arg CreateURLParams) error {
+	_, err := q.db.ExecContext(ctx, createURL,
+		arg.OriginalUrl,
+		arg.ShortCode,
+		arg.IsCustom,
+		arg.ExpiredAt,
+	)
 	return err
 }
 
@@ -41,4 +54,18 @@ func (q *Queries) GetInsertedURL(ctx context.Context) (Url, error) {
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const isShortCodeAvailable = `-- name: IsShortCodeAvailable :one
+SELECT NOT EXISTS(
+    SELECT 1 FROM urls
+    WHERE short_code = ?
+) AS is_available
+`
+
+func (q *Queries) IsShortCodeAvailable(ctx context.Context, shortCode string) (bool, error) {
+	row := q.db.QueryRowContext(ctx, isShortCodeAvailable, shortCode)
+	var is_available bool
+	err := row.Scan(&is_available)
+	return is_available, err
 }

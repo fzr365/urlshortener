@@ -9,8 +9,9 @@ import (
 )
 
 type Querier interface {
-	CreateURL(ctx context.Context) error
+	CreateURL(ctx context.Context, arg CreateURLParams) error
 	GetInsertedURL(ctx context.Context) (Url, error)
+	IsShortCodeAvailable(ctx context.Context, shortCode string) (bool, error)
 }
 
 var _ Querier = (*Queries)(nil)
