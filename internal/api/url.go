@@ -8,11 +8,13 @@ import (
 )
 
 //需求1： 长转短，POST /api/url original_url,custom_code,duration  ,--> short_url,expired_at
-//需求2： 重定向，GET /api/url/:short_code --> original_url,expired_at
+//需求2： 重定向，GET /api/url/:code --> original_url,expired_at
 
 //实现url转换的接口
-type URLServise interface {
+type URLService interface {
 	CreateURL(ctx context.Context, req model.CreateURLRequest) (*model.CreateURLResponse, error)
+
+	GetURL(ctx context.Context, shortCode string) (string, error)
 }
 
 
@@ -42,6 +44,21 @@ func (h *URLHandler) CreateURL(c echo.Context) error {
 	}
 	//返回201结果
 	 return c.JSON(http.StatusCreated, resp)
+}
+
+
+//需求2：get方法
+//需求2： 重定向，GET /api/url/:shortcode --> original_url,expired_at
+func(h*URLHandler) Redirect(c echo.Context) error {
+	//获取code
+	shortCode:=c.Param("code")
+	//shortcode-->url调用业务函数
+	originalURL,err:=h.urlService.GetOriginalURL(c.Request().Context(), shortCode)
+	if err!=nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	//重定向
+	return c.Redirect(http.StatusFound, originalURL)
 }
 
 
