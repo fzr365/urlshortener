@@ -56,6 +56,26 @@ func (q *Queries) GetInsertedURL(ctx context.Context) (Url, error) {
 	return i, err
 }
 
+const getURLByShortCode = `-- name: GetURLByShortCode :one
+SELECT id, original_url, short_code, is_custom, expired_at, created_at FROM urls
+WHERE short_code = ?
+AND expired_at > CURRENT_TIMESTAMP()
+`
+
+func (q *Queries) GetURLByShortCode(ctx context.Context, shortCode string) (Url, error) {
+	row := q.db.QueryRowContext(ctx, getURLByShortCode, shortCode)
+	var i Url
+	err := row.Scan(
+		&i.ID,
+		&i.OriginalUrl,
+		&i.ShortCode,
+		&i.IsCustom,
+		&i.ExpiredAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const isShortCodeAvailable = `-- name: IsShortCodeAvailable :one
 SELECT NOT EXISTS(
     SELECT 1 FROM urls

@@ -1,5 +1,5 @@
 package model
-
+import "time"
 //数据结构模型（长URL和短URL）
 
 type CreateURLRequest struct {

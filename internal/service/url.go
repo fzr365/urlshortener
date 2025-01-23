@@ -2,10 +2,11 @@ package service
 
 import (
 	"context"
-	"fmt"
-	"time"
 	"errors"
-)	
+	"time"
+    "github.com/fzr365/urlshortener/internal/model"
+	"github.com/fzr365/urlshortener/internal/repo"
+)
 
 //shortcode生成的接口
 type ShortCodeGenerator interface {
@@ -15,6 +16,7 @@ type ShortCodeGenerator interface {
 //抽象缓存接口
 type Cacher interface {
 	SetURL(ctx context.Context, url repo.Url) error
+	GetURL(ctx context.Context, shortCode string) (*repo.Url, error)
 }
 
 
@@ -43,7 +45,7 @@ func(s *URLService) CreateURL(ctx context.Context, req model.CreateURLRequest) (
 		//没有错误
 		//已经存在于数据库中
 		if !isAvailable {
-			return nil, fmt.Error("别名已存在")
+			return nil, errors.New("别名已存在")
 		}
 		//赋值
 		shortCode = req.CustomCode
@@ -56,7 +58,7 @@ func(s *URLService) CreateURL(ctx context.Context, req model.CreateURLRequest) (
 		shortCode = code 
 	}
 
-    if req.Expiration == nil{
+    if req.Duration == nil{
 		expiredAt = time.Now().Add(s.defaultDuration)
 	} else {
 		//涉及到指针的解引用
@@ -64,12 +66,12 @@ func(s *URLService) CreateURL(ctx context.Context, req model.CreateURLRequest) (
 	}
 
 	//存入数据库
-    url,err:= s.querier.CreateURL(ctx, repo.CreateURLParams{
+    err:= s.querier.CreateURL(ctx, repo.CreateURLParams{
 		OriginalUrl: req.OriginalURL,
 		ShortCode: shortCode,
 		IsCustom: isCustom,
 		ExpiredAt: expiredAt,
-		})
+	})
 
 	if err!=nil {
 		return nil, err
@@ -86,7 +88,29 @@ func(s *URLService) CreateURL(ctx context.Context, req model.CreateURLRequest) (
 		}, nil
 }
 
+//GetURL(ctx context.Context, shortCode string) (string, error)
+func (s *URLService) GetURL(ctx context.Context, shortCode string) (string, error) {
+	//先访问缓存
+	url,err:= s.cache.GetURL(ctx, shortCode)
+	if err!=nil {
+		return "", err
+	}	
+	if url!=nil{
+		return url.OriginalUrl, nil
+	}
+	//访问数据库
+	url2,err := s.querier.GetURLByShortCode(ctx, shortCode)
+	if err!=nil {
+		return "", err
+	}
 
+	//存入缓存
+	if err:=s.cache.SetURL(ctx, url2); err!=nil {
+		return "", err
+	}
+	
+	return url2.OriginalUrl, nil
+}
 
 //重试机制，不存在shortcode，生成一次，插入数据库，再查询，直到成功
 func(s *URLService) getShortCode(ctx context.Context,n int) (string, error){
@@ -106,3 +130,4 @@ func(s *URLService) getShortCode(ctx context.Context,n int) (string, error){
 
 	return s.getShortCode(ctx,n+1)
 }
+

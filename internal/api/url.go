@@ -2,7 +2,7 @@ package api
 
 import (
 	"net/http"
-
+    "context"
 	"github.com/fzr365/urlshortener/internal/model"
 	"github.com/labstack/echo/v4"
 )
@@ -20,7 +20,7 @@ type URLService interface {
 
 type URLHandler struct {
 	//传入转换的接口
-	urlService URLServise
+	urlService URLService
 }
 
 //需求1：post方法
@@ -49,16 +49,16 @@ func (h *URLHandler) CreateURL(c echo.Context) error {
 
 //需求2：get方法
 //需求2： 重定向，GET /api/url/:shortcode --> original_url,expired_at
-func(h*URLHandler) Redirect(c echo.Context) error {
+func(h*URLHandler) RedirectURL(c echo.Context) error {
 	//获取code
 	shortCode:=c.Param("code")
 	//shortcode-->url调用业务函数
-	originalURL,err:=h.urlService.GetOriginalURL(c.Request().Context(), shortCode)
+	originalURL,err:=h.urlService.GetURL(c.Request().Context(), shortCode)
 	if err!=nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	//重定向
-	return c.Redirect(http.StatusFound, originalURL)
+	//永久重定向(浏览器缓存)
+	return c.Redirect(http.StatusPermanentRedirect, originalURL)
 }
 
 

@@ -1,5 +1,5 @@
 package cache
-import("github.com/go-redis/redis/v8")
+import("github.com/go-redis/redis/v8","context","time","encoding/json")
 
 //具体实现SetURL(ctx context.Context, url repo.Url) error接口
 
@@ -19,4 +19,23 @@ func (c *RedisCache) SetURL(ctx context.Context, url repo.Url) error {
 	}
 
 	return nil
+}
+
+//实现GetURL(ctx context.Context, shortCode string) (*repo.Url, error)
+
+func (c *RedisCache) GetURL(ctx context.Context, shortCode string) (*repo.Url, error) {
+	data,err:= c.client.Get(ctx, shortCode).Bytes()
+	if err==redis.Nil {
+		return nil, nil	
+	}
+	if err!=nil {
+		return nil, err
+	}
+	//将data反序列化为结构体
+	var url repo.Url
+	if err:= json.Unmarshal(data, &url);err!=nil {
+		return nil, err
+	}
+	
+	return &url, nil
 }

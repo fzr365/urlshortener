@@ -1,5 +1,7 @@
 package shortcode
 
+import "math/rand"
+
 //实现GenerateShortCode() string 接口
 
 type ShortCode struct{
