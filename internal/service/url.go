@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"time"
 
@@ -27,6 +28,20 @@ type URLService struct {
 	cache              Cacher
 	baseURL            string
 }
+
+//对外服务层划分
+// NewURLService 构造函数
+func NewURLService(db *sql.DB, shortCodeGenerator ShortCodeGenerator, duration time.Duration, cache Cacher, baseURL string) *URLService {
+	return &URLService{
+		querier:            repo.New(db),
+		shortCodeGenerator: shortCodeGenerator,
+		defaultDuration:    duration,
+		cache:              cache,
+		baseURL:            baseURL,
+	}	
+}
+
+
 
 func (s *URLService) CreateURL(ctx context.Context, req model.CreateURLRequest) (*model.CreateURLResponse, error) {
 	var shortCode string

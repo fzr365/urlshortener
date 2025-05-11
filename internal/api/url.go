@@ -23,6 +23,17 @@ type URLHandler struct {
 	urlService URLService
 }
 
+
+//对外函数api层
+func NewURLHandler(urlService URLService) *URLHandler {
+	return &URLHandler{
+		urlService: urlService,
+	}	
+}
+
+
+
+
 //需求1：post方法
 func (h *URLHandler) CreateURL(c echo.Context) error {
 	//把数据提取

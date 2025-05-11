@@ -15,6 +15,16 @@ type RedisCache struct {
 	client *redis.Client
 }
 
+//新建对外函数
+func NewRedisCache(client *redis.Client) *RedisCache {
+	return &RedisCache{
+		client: client,
+	}	
+}
+
+
+
+
 func (c *RedisCache) SetURL(ctx context.Context, url repo.Url) error {
 	//因为传入的是结构体，存储的是string，所以需要将结构体转换为string，序列化
 	data, err := json.Marshal(url)
