@@ -72,6 +72,8 @@ func (s *URLService) CreateURL(ctx context.Context, req model.CreateURLRequest) 
 		shortCode = code
 	}
 
+
+	
 	if req.Duration == nil {
 		expiredAt = time.Now().Add(s.defaultDuration)
 	} else {
